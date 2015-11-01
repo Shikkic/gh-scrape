@@ -1,4 +1,6 @@
-var request = require('request');
+var request = require('request'),
+    underscore = require('underscore');
+
 /*
 function scrapeProfileDetails(html, callback) {
     var j = 0;
