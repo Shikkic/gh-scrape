@@ -272,7 +272,7 @@ function scrapeCommits(html, callback) {
             } 
         }
     }
-    console.log(data);
+    callback(data);
 };
 
 function getRequest(gitUrl, callback) {
@@ -296,7 +296,7 @@ getRequest("https://github.com/shikkic", function(data) {
     });
 });
 */
-// Test for scrape Con
+/* Test for scrape Con
 getRequest("https://github.com/shikkic", function(data) {
     console.log("running process");
     data = data.toString();
@@ -304,12 +304,22 @@ getRequest("https://github.com/shikkic", function(data) {
         console.log(results);
     });
 });
+*/
 
-/*exports.scrape = function (url, callback) {
+exports.scrape = function (url, callback) {
     getRequest(url, function(data) {
         data = data.toString();
         scrapeCon(data, function(results){
             callback(results);
         });
     });
-};*/
+};
+
+exports.scrapeCommits = function (url, callback) {
+    getRequest(url, function(data) {
+        data = data.toString();
+        scrapeCommits(data, function(results){
+            callback(results);
+        });
+    });
+};
