@@ -153,7 +153,7 @@ function scrapeCon(html, callback) {
                 while (j < len && !found) {
                     character = html[j];
                     if (character === 'c') {
-                        word = html.slice(j, j +14);
+                        word = html.slice(j, j + 14);
                         if (word === "contrib-number") {
                             found = true;
                             word = "";
@@ -205,6 +205,76 @@ function scrapeCon(html, callback) {
     callback(user);
 };
 
+function scrapeCommits(html, callback) {
+    var data = [],
+        j = 0,
+        z = 0,
+        index = 0,
+        character = '',
+        word = "",
+        found = false,
+        len = html.length - 1;
+
+    for (i = 0; i < len ;i++) {
+        var character = html[i];
+        // Look for starting tag identifer 
+        if (character  === '<') {
+            word = html.slice(i, i + 5);
+            // Check if it's a '<rect'
+            if (word === '<rect') {
+                // loop until not the end of the doc and the rest of the word  
+                var endWord = html.slice(i, i + 5);
+                var endTag = '/>';
+                var j = i;
+                var newData = {};
+
+                // Loop until we hit closing tag '/>
+                while (endWord !== endTag) {
+
+                    // reset character
+                    character = html[j];
+                    // checking for beginings of 'data-count' or 'data source'.
+                    if (character === 'd') {
+                        //console.log(html.slice(j, j + 10));
+                        var dataCountString = html.slice(j, j + 10);
+                        // CASE 1 'data-count'
+                        if (dataCountString === 'data-count') {
+                            // Loop through until you hit the " and add data to obj
+                            var z = j + 12;
+                            var dataCountNumber = "";
+                            character = html[z];
+                            while (character !== '"') {
+                                dataCountNumber += character;
+                                z++;
+                                character = html[z];
+                            }
+                            //console.log(dataCountNumber);
+                            newData.commits = dataCountNumber;
+                        }
+                        //CASE 2 'data-date'
+                        var dataDateString = html.slice(j, j + 9);
+                        if (dataDateString === 'data-date') {
+                           var z = j + 11; 
+                           var dateValue = "";
+                           character = html[z];
+                           while (character !== '"') {
+                                dateValue += character;
+                                z++;
+                                character = html[z];
+                           }
+                           newData.date = dateValue;
+                        }
+                    }
+                    j++;
+                    endWord = html.slice(j, j + 2);
+                }
+                data.push(newData);
+            } 
+        }
+    }
+    console.log(data);
+};
+
 function getRequest(gitUrl, callback) {
     var options = {
         url: gitUrl
@@ -217,10 +287,20 @@ function getRequest(gitUrl, callback) {
     });
 };
 
+/* Test for scrape Con
 getRequest("https://github.com/shikkic", function(data) {
     console.log("running process");
     data = data.toString();
     scrapeCon(data, function(results) {
+        console.log(results);
+    });
+});
+*/
+// Test for scrape Con
+getRequest("https://github.com/shikkic", function(data) {
+    console.log("running process");
+    data = data.toString();
+    scrapeCommits(data, function(results) {
         console.log(results);
     });
 });
