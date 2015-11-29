@@ -2,130 +2,38 @@ var request = require('request'),
     underscore = require('underscore'),
     cheerio = require('cheerio');
 
-function scrapeCon(html, callback) {
-    console.log("made it to the begining");
-    var user = {},
-        j = 0,
-        z = 0,
-        index = 0,
-        character = '',
-        word = "",
-        found = false,
-        len = html.length - 1;
+function scrapeProfileStats(html, callback) {
+    $ = cheerio.load(html);
+    var statDataObj = {};
 
-    for (i = 0; i < len; i++) {
-        // Loop over every char on the page
-        character = html[i];
-        // Finding Contributions in the last year
-        if (character === 'C') {
-            index = i + 30;
-            word = html.slice(i, index);
-            // Contributions in the last year
-            if (word === "Contributions in the last year") {
-                j = i + 30;
-                found = false;
-                while (j < len && !found) {
-                    character = html[j];
-                    if (character === 'c') {
-                        word = html.slice(j, j + 14);
-                        if (word === "contrib-number") {
-                            found = true;
-                            word = "";
-                            z = j + 16;
-                            character = html[z];
-                            while (character != '<') {
-                                word += character;
-                                z++;
-                                character = html[z];
-                            }
-                            user.total = word;
-                            //console.log("total = ", user.total);
-                        }
-                    }
-                    j++;
-                }
-            }
-            index = i + 14;
-            word = html.slice(i, index);
-            if (word === "Current streak") {
-                j = i + 14;
-                found = false;
-                while (j < len && !found) {
-                    character = html[j];
-                    if (character === 'c') {
-                        word = html.slice(j, j + 14);
-                        if (word === "contrib-number") {
-                            found = true;
-                            word = "";
-                            z = j + 16;
-                            character = html[z];
-                            while (character != '<') {
-                                word += character;
-                                z++;
-                                character = html[z];
-                            }
-                            user.currentStreak = word;
-                            //console.log("Current streak = ", user.currentStreak);
-                        }
-                    }
-                    j++;
-                } 
-            }
-        }
-        // Finding Longest Streak
-        if (character === 'L') {
-            index = i + 14;
-            word = html.slice(i, index); 
-            if (word === 'Longest streak') {
-                j = i + 15;
-                found = false;
-                while (j < len && !found) {
-                    character = html[j];
-                    if (character === 'c') {
-                        word = html.slice(j, j +14);
-                        if (word === "contrib-number") {
-                            found = true;
-                            word = "";
-                            z = j + 16;
-                            character = html[z];
-                            while (character != '<') {
-                                word += character;
-                                z++;
-                                character = html[z];
-                            }
-                            user.longestStreak = word;
-                            //console.log("Longest Streak = ", user.streak);
-                        }
-                    }
-                    j++;
-                }
-            }
-        }
-    }
-    callback(user);
-};
+    $('.vcard-stat > strong').each(function(index, statData) {
+        var statData = statData.children[0].data;
 
-
-function getRequest(gitUrl, callback) {
-    var options = {
-        url: gitUrl
-    };
-    request.get(options, function(error, response, body){
-        if(!error) {
-            callback(body);
+        if (index == 0) {
+            statDataObj.followers = parseInt(statData);
+        } else if (index === 1) {
+            statDataObj.starred = parseInt(statData);
+        } else {
+            statDataObj.following = parseInt(statData);
         }
-        return Error;
     });
-};
 
+    // Validate it contains data before sending
+    if (statDataObj) {
+        callback(statDataObj);
+    } else {
+        // If it fails validation return null
+        callback(null);
+    }
+}; 
 
-function scrapeContributions(html, callback) {
+function scrapeContributionData(html, callback) {
     $ = cheerio.load(html);
     var commitDataArray = [];
 
     $('rect').each(function(index, commitData) {
         // Look for our contribtion data
-        var dataContributionCount = commitData.attribs['data-count'];
+        var dataContributionCount = parseInt(commitData.attribs['data-count']);
         var dataDate = commitData.attribs['data-date'];
         var commitDataObj = {};
 
@@ -139,7 +47,6 @@ function scrapeContributions(html, callback) {
 
     // Validate it contains data before sending
     if (commitDataArray.length > 0) {
-        console.log("returning Array");
         callback(commitDataArray);
     } else {
         // If it fails validation return null
@@ -147,29 +54,49 @@ function scrapeContributions(html, callback) {
     }
 }; 
 
-// Test for scrape Con
+// GET Request Helper Function 
+function getRequest(gitUrl, callback) {
+    var options = {
+        url: gitUrl
+    };
+    request.get(options, function(error, response, body){
+        if(!error) {
+            callback(body);
+        }
+        return Error;
+    });
+};
+
+// Export Scrape Contribution Data Function
+exports.scrapeContributionData = function (url, callback) {
+    getRequest(url, function(data) {
+        scrapeContributionData(data, function(results){
+            callback(results);
+        });
+    });
+};
+
+// Export Scrape Profile Stats Data Function
+exports.scrapeProfileStats = function (url, callback) {
+    getRequest(url, function(html) {
+        scrapeProfileStats(html, function(results) {
+            callback(results);
+        });
+    });
+};
+
+// Tests
+/*
 getRequest("https://github.com/shikkic", function(html) {
     console.log("running process");
-    scrapeContributions(html, function(results) {
+    scrapeContributionData(html, function(results) {
         console.log(results);
     });
 });
 
-/*exports.scrape = function (url, callback) {
-    getRequest(url, function(data) {
-        data = data.toString();
-        scrapeCon(data, function(results){
-            callback(results);
-        });
+getRequest("https://github.com/shikkic", function(html) {
+    scrapeProfileStats(html, function(results) {
+        console.log(results);
     });
-};*/
-
-/*
-exports.scrapeCommits = function (url, callback) {
-    getRequest(url, function(html) {
-        console.log("running process");
-        scrapeContributions(html, function(results) {
-            console.log(results);
-        });
-    });
-};*/
+});
+*/
