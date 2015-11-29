@@ -2,19 +2,19 @@ var request = require('request'),
     underscore = require('underscore'),
     cheerio = require('cheerio');
 
-function scrapeProfileStats(html, callback) {
+function scrapeContributionStats(html, callback) {
     $ = cheerio.load(html);
     var statDataObj = {};
 
-    $('.vcard-stat > strong').each(function(index, statData) {
+    $('.contrib-number').each(function(index, statData) {
         var statData = statData.children[0].data;
 
         if (index == 0) {
-            statDataObj.followers = parseInt(statData);
+            statDataObj.totalContributions = parseInt(statData);
         } else if (index === 1) {
-            statDataObj.starred = parseInt(statData);
+            statDataObj.longestStreak = parseInt(statData);
         } else {
-            statDataObj.following = parseInt(statData);
+            statDataObj.currentStreak = parseInt(statData);
         }
     });
 
@@ -77,9 +77,9 @@ exports.scrapeContributionData = function (url, callback) {
 };
 
 // Export Scrape Profile Stats Data Function
-exports.scrapeProfileStats = function (url, callback) {
+exports.scrapeContributionStats = function (url, callback) {
     getRequest(url, function(html) {
-        scrapeProfileStats(html, function(results) {
+        scrapeContributionStats(html, function(results) {
             callback(results);
         });
     });
@@ -95,8 +95,7 @@ getRequest("https://github.com/shikkic", function(html) {
 });
 
 getRequest("https://github.com/shikkic", function(html) {
-    scrapeProfileStats(html, function(results) {
+    scrapeContributionStats(html, function(results) {
         console.log(results);
     });
-});
-*/
+});*/
