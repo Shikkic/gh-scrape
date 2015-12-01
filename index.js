@@ -20,6 +20,12 @@ exports.scrapeContributionStats = function (url, callback) {
     });
 };
 
+// Returns an Object Containing Contribution Stats
+// statDataObj = {
+//      totalContributions: #,
+//      longestStreak: #,
+//      currentStreak: #
+// };
 function scrapeContributionStats(html, callback) {
     $ = cheerio.load(html);
     var statDataObj = {};
@@ -45,6 +51,11 @@ function scrapeContributionStats(html, callback) {
     }
 }; 
 
+// Returns an Object Containing Contribution Data
+// CommitDataObj = {
+//      dataContributionCount: #,
+//      dataDate: #,
+// };
 function scrapeContributionData(html, callback) {
     $ = cheerio.load(html);
     var commitDataArray = [];
