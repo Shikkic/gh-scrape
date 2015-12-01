@@ -2,6 +2,24 @@ var request = require('request'),
     underscore = require('underscore'),
     cheerio = require('cheerio');
 
+// Export Scrape Contribution Data Function
+exports.scrapeContributionData = function (url, callback) {
+    getRequest(url, function(data) {
+        scrapeContributionData(data, function(results){
+            callback(results);
+        });
+    });
+};
+
+// Export Scrape Profile Stats Data Function
+exports.scrapeContributionStats = function (url, callback) {
+    getRequest(url, function(html) {
+        scrapeContributionStats(html, function(results) {
+            callback(results);
+        });
+    });
+};
+
 function scrapeContributionStats(html, callback) {
     $ = cheerio.load(html);
     var statDataObj = {};
@@ -64,24 +82,6 @@ function getRequest(gitUrl, callback) {
             callback(body);
         }
         return Error;
-    });
-};
-
-// Export Scrape Contribution Data Function
-exports.scrapeContributionData = function (url, callback) {
-    getRequest(url, function(data) {
-        scrapeContributionData(data, function(results){
-            callback(results);
-        });
-    });
-};
-
-// Export Scrape Profile Stats Data Function
-exports.scrapeContributionStats = function (url, callback) {
-    getRequest(url, function(html) {
-        scrapeContributionStats(html, function(results) {
-            callback(results);
-        });
     });
 };
 
