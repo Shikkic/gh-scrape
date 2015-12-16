@@ -4,9 +4,17 @@ var request = require('request'),
 
 // Export Scrape Contribution Data Function
 exports.scrapeContributionData = function (url, callback) {
-    getRequest(url, function(data) {
+    getRequest(url, function(html) {
         scrapeContributionData(data, function(results){
-            callback(results);
+            if ( results == null) {
+                getRequest(url, function(html) {
+                    scrapeContributionData(data, function(results) {
+                        callback(results);
+                    });
+                });
+            } else {
+                callback(results);
+            }
         });
     });
 };
@@ -15,7 +23,15 @@ exports.scrapeContributionData = function (url, callback) {
 exports.scrapeContributionStats = function (url, callback) {
     getRequest(url, function(html) {
         scrapeContributionStats(html, function(results) {
-            callback(results);
+            if (results == null) {
+                getRequest(url, function(html) {
+                    scrapeContributionStats(html, function(results) {
+                        callback(results);
+                    });
+                });
+            } else {
+                callback(results);
+            }
         });
     });
 };
@@ -99,14 +115,33 @@ function getRequest(gitUrl, callback) {
 // Tests
 /*
 getRequest("https://github.com/shikkic", function(html) {
-    console.log("running process");
+    console.log("Scraping Contribution Data");
     scrapeContributionData(html, function(results) {
-        console.log(results);
+        if (results == null) {
+            console.log("result is equal null ", results);
+            getRequest("https://github.com/shikkic", function(html) {
+                scrapeContributionData(html, function(results) {
+                    console.log(results);
+                });
+            });
+        } else {
+            console.log(results);
+        }
     });
 });
 
 getRequest("https://github.com/shikkic", function(html) {
+    console.log("Scraping Contribution Stats");
     scrapeContributionStats(html, function(results) {
-        console.log(results);
+        if (results == null) {
+            console.log("result is equal null ", results);
+            getRequest("https://github.com/shikkic", function(html) {
+                scrapeContributionData(html, function(results) {
+                    console.log(results);
+                });
+            });
+        } else {
+            console.log(results);
+        }
     });
 });*/
