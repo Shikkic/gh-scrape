@@ -6,6 +6,7 @@ var request = require('request'),
 exports.scrapeContributionData = function (url, callback) {
     getRequest(url, function(html) {
         scrapeContributionData(data, function(results){
+            // TODO implement better error handling
             if ( results == null) {
                 getRequest(url, function(html) {
                     scrapeContributionData(data, function(results) {
@@ -23,6 +24,7 @@ exports.scrapeContributionData = function (url, callback) {
 exports.scrapeContributionStats = function (url, callback) {
     getRequest(url, function(html) {
         scrapeContributionStats(html, function(results) {
+            // TODO implement better error handling
             if (results == null) {
                 getRequest(url, function(html) {
                     scrapeContributionStats(html, function(results) {
