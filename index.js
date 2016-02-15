@@ -127,9 +127,9 @@ function scrapeContributionData(html, callback) {
 
     $('rect').each(function(index, commitData) {
         // Look for our contribtion data
-        var dataContributionCount = parseInt(commitData.attribs['data-count']);
-        var dataDate = commitData.attribs['data-date'];
-        var commitDataObj = {};
+        var dataContributionCount = parseInt(commitData.attribs['data-count']),
+            dataDate = commitData.attribs['data-date'],
+            commitDataObj = {};
 
         // Validate it contains data
         if (dataContributionCount && dataDate) {
