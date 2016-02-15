@@ -41,6 +41,7 @@ exports.scrapeContributionStats = function (url, callback) {
 
 // Export Scrape Profile Data and Stats function
 exports.scrapeContributionDataAndStats = function (url, callback) {
+    var returnObj = {};
     getRequest(url, function(html) {
         scrapeContributionStats(html, function(statsData) {
             // TODO implement better error handling
@@ -48,18 +49,14 @@ exports.scrapeContributionDataAndStats = function (url, callback) {
                 getRequest(url, function(html) {
                     scrapeContributionStats(html, function(statsData) {
                         scrapeContributionData(html, function(contributionData) {
-                            if (contributionData && statsData) {
-                                var returnObj = formatReturnData(contributionData, statsData);   
-                                callback(returnObj);
-                            } else {
-                                return error; 
-                            }
+                            returnObj = formatReturnData(contributionData, statsData);   
+                            callback(returnObj);
                         });
                     });
                 });
             } else {
                 scrapeContributionData(html, function(contributionData) {
-                    var returnObj = formatReturnData(contributionData, statsData); 
+                    returnObj = formatReturnData(contributionData, statsData); 
                     callback(returnObj);
                 });
             }
@@ -75,17 +72,18 @@ function formatReturnData(contributionData, statsData) {
 };
 
 function getCommitsToday(contributionData) {
-    var latestCommits = _.last(contributionData);
-    var latestCommitsDate = moment(latestCommits.dataDate).dayOfYear();
-    var todaysDate = moment().dayOfYear();
+    // Grab lastest commit data
+    var latestCommits = _.last(contributionData),
+        latestCommitsDate = moment(latestCommits.dataDate).dayOfYear(),
+        todaysDate = moment().dayOfYear();
 
-    if (latestCommitsDate && todaysDate) {
+    // Check if the lastest commit data is from today or not
+    if (latestCommitsDate === todaysDate) {
         return latestCommits.dataContributionCount;
     }
 
     return 0;
 };
-
 
 // Returns an Object Containing Contribution Stats
 // statDataObj = {
@@ -197,19 +195,20 @@ getRequest("https://github.com/shikkic", function(html) {
     });
 });*/
 
-
-getRequest("http://www.github.com/shikkic", function(html) {
-    console.log(html);
+// Test for scraping both contribution stats and data
+/*
+getRequest("http://www.github.com/skeswa", function(html) {
+    //console.log(html);
 	scrapeContributionStats(html, function(statsData) {
 		// TODO implement better error handling
         console.log(statsData);
-		if (statsData == null) {
+		if (statsData) {
             console.log("Stat data is null");
-			getRequest("http://www.github.com/shikkic", function(html) {
+			getRequest("http://www.github.com/skeswa", function(html) {
 				scrapeContributionStats(html, function(statsData) {
 					scrapeContributionData(html, function(contributionData) {
 						var returnObj = formatReturnData(contributionData, statsData);   
-                        //console.log(returnObj);
+                        console.log(returnObj);
 					});
 				});
 			});
@@ -224,3 +223,4 @@ getRequest("http://www.github.com/shikkic", function(html) {
 		}
 	});
 });
+*/
