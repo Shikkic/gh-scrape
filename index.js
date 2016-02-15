@@ -1,20 +1,21 @@
 var request = require('request'),
-    underscore = require('underscore'),
-    cheerio = require('cheerio');
+    _ = require('underscore'),
+    cheerio = require('cheerio'),
+    moment = require('moment');
 
 // Export Scrape Contribution Data Function
 exports.scrapeContributionData = function (url, callback) {
     getRequest(url, function(html) {
-        scrapeContributionData(data, function(results){
+        scrapeContributionData(html, function(contributionData){
             // TODO implement better error handling
             if ( results == null) {
                 getRequest(url, function(html) {
-                    scrapeContributionData(data, function(results) {
-                        callback(results);
+                    scrapeContributionData(data, function(contributionData) {
+                        callback(contributionData);
                     });
                 });
             } else {
-                callback(results);
+                callback(contributionData);
             }
         });
     });
@@ -23,20 +24,68 @@ exports.scrapeContributionData = function (url, callback) {
 // Export Scrape Profile Stats Data Function
 exports.scrapeContributionStats = function (url, callback) {
     getRequest(url, function(html) {
-        scrapeContributionStats(html, function(results) {
+        scrapeContributionStats(html, function(statsData) {
             // TODO implement better error handling
             if (results == null) {
                 getRequest(url, function(html) {
-                    scrapeContributionStats(html, function(results) {
-                        callback(results);
+                    scrapeContributionStats(html, function(statsData) {
+                        callback(statsData);
                     });
                 });
             } else {
-                callback(results);
+                callback(statsData);
             }
         });
     });
 };
+
+// Export Scrape Profile Data and Stats function
+exports.scrapeContributionDataAndStats = function (url, callback) {
+    getRequest(url, function(html) {
+        scrapeContributionStats(html, function(statsData) {
+            // TODO implement better error handling
+            if (statsData == null) {
+                getRequest(url, function(html) {
+                    scrapeContributionStats(html, function(statsData) {
+                        scrapeContributionData(html, function(contributionData) {
+                            if (contributionData && statsData) {
+                                var returnObj = formatReturnData(contributionData, statsData);   
+                                callback(returnObj);
+                            } else {
+                                return error; 
+                            }
+                        });
+                    });
+                });
+            } else {
+                scrapeContributionData(html, function(contributionData) {
+                    var returnObj = formatReturnData(contributionData, statsData); 
+                    callback(returnObj);
+                });
+            }
+        });
+    });
+};
+
+// Helper functions
+
+function formatReturnData(contributionData, statsData) {
+    var commitsToday = getCommitsToday(contributionData); 
+    return {contributionData: contributionData, statsData: statsData, commitsToday: commitsToday};
+};
+
+function getCommitsToday(contributionData) {
+    var latestCommits = _.last(contributionData);
+    var latestCommitsDate = moment(latestCommits.dataDate).dayOfYear();
+    var todaysDate = moment().dayOfYear();
+
+    if (latestCommitsDate && todaysDate) {
+        return latestCommits.dataContributionCount;
+    }
+
+    return 0;
+};
+
 
 // Returns an Object Containing Contribution Stats
 // statDataObj = {
@@ -110,7 +159,7 @@ function getRequest(gitUrl, callback) {
         if(!error) {
             callback(body);
         }
-        return Error;
+        return error;
     });
 };
 
@@ -147,3 +196,31 @@ getRequest("https://github.com/shikkic", function(html) {
         }
     });
 });*/
+
+
+getRequest("http://www.github.com/shikkic", function(html) {
+    console.log(html);
+	scrapeContributionStats(html, function(statsData) {
+		// TODO implement better error handling
+        console.log(statsData);
+		if (statsData == null) {
+            console.log("Stat data is null");
+			getRequest("http://www.github.com/shikkic", function(html) {
+				scrapeContributionStats(html, function(statsData) {
+					scrapeContributionData(html, function(contributionData) {
+						var returnObj = formatReturnData(contributionData, statsData);   
+                        //console.log(returnObj);
+					});
+				});
+			});
+		} else {
+            console.log("Stat data is not null");
+            console.log(statsData);
+			scrapeContributionData(html, function(contributionData) {
+                console.log(contributionData);
+				var returnObj = formatReturnData(contributionData, statsData); 
+                console.log(returnObj);
+			});
+		}
+	});
+});
