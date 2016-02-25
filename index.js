@@ -40,7 +40,7 @@ exports.scrapeContributionStats = function (url, callback) {
 };
 
 // Export Scrape Profile Data and Stats function
-exports.scrapeContributionDataAndStats = function (url, callback) {
+exports.scrapeContributionDataAndStats = function(url, callback) {
     var returnObj = {};
     getRequest(url, function(html) {
         scrapeContributionStats(html, function(statsData) {
@@ -72,6 +72,10 @@ function formatReturnData(contributionData, statsData) {
 };
 
 function getCommitsToday(contributionData) {
+    if (!contributionData) {
+        return null;
+    }
+
     // Grab lastest commit data
     var latestCommits = _.last(contributionData),
         latestCommitsDate = moment(latestCommits.dataDate).dayOfYear(),
