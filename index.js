@@ -68,7 +68,8 @@ exports.scrapeContributionDataAndStats = function(url, callback) {
 
 function formatReturnData(contributionData, statsData) {
     var commitsToday = getCommitsToday(contributionData); 
-    return {contributionData: contributionData, statsData: statsData, commitsToday: commitsToday};
+    var returnData = {contributionData: contributionData, statsData: statsData, commitsToday: commitsToday};
+    return commitsToday == null ? null : returnData;
 };
 
 function getCommitsToday(contributionData) {
