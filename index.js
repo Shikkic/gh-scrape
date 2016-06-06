@@ -28,8 +28,8 @@ exports.scrapeContributionDataAndStats = function(url, callback) {
 function deriveContributionStats(contributionData) {
 
     // Some variables
-    var longestStreak = 1;
-    var currentStreak = 1;
+    var longestStreak = 0;
+    var currentStreak = 0;
     var lastDay = '0-0-0';
 
     // Reduce the total number of contributions to a single integer
@@ -72,8 +72,8 @@ function deriveContributionStats(contributionData) {
 
     return {
         totalContributions: totalContributions,
-        longestStreak: longestStreak,
-        currentStreak: currentStreak
+        longestStreak: longestStreak + 1,
+        currentStreak: currentStreak + 1
     };
 }
 

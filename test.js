@@ -7,6 +7,8 @@ gh.scrapeContributionDataAndStats(url, (data) => {
     } else {
         console.log('[ FAIL ] Test 1 failed!');
     }
+
+    console.log(data);
 });
 
 
