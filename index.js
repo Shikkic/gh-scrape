@@ -2,7 +2,13 @@ var request = require('request'),
     cheerio = require('cheerio'),
     moment = require('moment');
 
-// Export Scrape Profile Data and Stats function
+
+/**
+ * List of contributons, latest commit, streak etc.
+ *
+ * @param  {string} url - URL to the github repo
+ * @param  {function} callback - Receives the data
+ */
 exports.scrapeContributionDataAndStats = function(url, callback) {
     var returnObj = {};
     getRequest(url, function(html) {
@@ -13,7 +19,13 @@ exports.scrapeContributionDataAndStats = function(url, callback) {
     });
 };
 
-// Helper functions
+
+/**
+ * Derive the streak
+ *
+ * @param  {object} contributionData - Contribution data
+ * @return {object} - Stats derived from the contribution data
+ */
 function deriveContributionStats(contributionData) {
 
     // Some variables
@@ -66,12 +78,27 @@ function deriveContributionStats(contributionData) {
     };
 }
 
+
+/**
+ * Neatly formats contributionData and statsData
+ *
+ * @param  {object} contributionData
+ * @param  {object} statsData
+ * @return {object} - Returns null if no commits have happened today
+ */
 function formatReturnData(contributionData, statsData) {
     var commitsToday = getCommitsToday(contributionData);
     var returnData = {contributionData: contributionData, statsData: statsData, commitsToday: commitsToday};
     return commitsToday == null ? null : returnData;
 };
 
+
+/**
+ * Returns the amount of contributions that happened on the current day
+ *
+ * @param  {object} contributionData
+ * @return {integer} - Amount of contributions in the current day
+ */
 function getCommitsToday(contributionData) {
     if (!contributionData) {
         return null;
@@ -95,6 +122,14 @@ function getCommitsToday(contributionData) {
 //      dataContributionCount: #,
 //      dataDate: #,
 // };
+
+
+/**
+ * Returns an object containing contribution data
+ *
+ * @param  {string} html - HTML of the github page
+ * @param  {function} callback - Receives contribution data
+ */
 function scrapeContributionData(html, callback) {
     $ = cheerio.load(html);
     var commitDataArray = [];
@@ -122,12 +157,18 @@ function scrapeContributionData(html, callback) {
     }
 };
 
-// GET Request Helper Function
+
+/**
+ * Opiniated get request
+ *
+ * @param  {string} gitUrl
+ * @param  {function} callback3
+ */
 function getRequest(gitUrl, callback) {
     var options = {
         url: gitUrl
     };
-    request.get(options, function(error, response, body){
+    request.get(options, function(error, response, body) {
         if(!error) {
             callback(body);
         }
