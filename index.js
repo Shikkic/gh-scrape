@@ -1,5 +1,4 @@
 var request = require('request'),
-    _ = require('underscore'),
     cheerio = require('cheerio'),
     moment = require('moment');
 
@@ -79,7 +78,7 @@ function getCommitsToday(contributionData) {
     }
 
     // Grab lastest commit data
-    var latestCommits = _.last(contributionData),
+    var latestCommits = contributionData[contributionData.length - 1],
         latestCommitsDate = moment(latestCommits.dataDate).dayOfYear(),
         todaysDate = moment().dayOfYear();
 
