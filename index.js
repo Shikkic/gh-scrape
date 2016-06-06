@@ -104,10 +104,10 @@ function getCommitsToday(contributionData) {
         return null;
     }
 
-    // Grab lastest commit data
-    var latestCommits = contributionData[contributionData.length - 1],
-        latestCommitsDate = moment(latestCommits.dataDate).dayOfYear(),
-        todaysDate = moment().dayOfYear();
+    // Grab latest commit data
+    var latestCommits = contributionData[contributionData.length - 1];
+    var latestCommitsDate = dayOfYear(latestCommits.dataDate);
+    var todaysDate = dayOfYear(new Date());
 
     // Check if the lastest commit data is from today or not
     if (latestCommitsDate === todaysDate) {
@@ -175,6 +175,23 @@ function getRequest(gitUrl, callback) {
         return error;
     });
 };
+
+
+/**
+ * Returns the day of the year
+ *
+ * @param {string, date} date - Can be a string or a timestamp
+ * @return {integer} The day of the year
+ */
+function dayOfYear(date) {
+    var now = new Date(date);
+    var start = new Date(now.getFullYear(), 0, 0);
+    var diff = now - start;
+    var oneDay = 1000 * 60 * 60 * 24;
+    var day = Math.floor(diff / oneDay);
+
+    return day;
+}
 
 // Deprecated warnings
 exports.scrapeContributionData = function() {
