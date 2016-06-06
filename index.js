@@ -3,42 +3,6 @@ var request = require('request'),
     cheerio = require('cheerio'),
     moment = require('moment');
 
-// Export Scrape Contribution Data Function
-exports.scrapeContributionData = function (url, callback) {
-    getRequest(url, function(html) {
-        scrapeContributionData(html, function(contributionData){
-            // TODO implement better error handling
-            if ( results == null) {
-                getRequest(url, function(html) {
-                    scrapeContributionData(data, function(contributionData) {
-                        callback(contributionData);
-                    });
-                });
-            } else {
-                callback(contributionData);
-            }
-        });
-    });
-};
-
-// Export Scrape Profile Stats Data Function
-exports.scrapeContributionStats = function (url, callback) {
-    getRequest(url, function(html) {
-        scrapeContributionStats(html, function(statsData) {
-            // TODO implement better error handling
-            if (results == null) {
-                getRequest(url, function(html) {
-                    scrapeContributionStats(html, function(statsData) {
-                        callback(statsData);
-                    });
-                });
-            } else {
-                callback(statsData);
-            }
-        });
-    });
-};
-
 // Export Scrape Profile Data and Stats function
 exports.scrapeContributionDataAndStats = function(url, callback) {
     var returnObj = {};
@@ -51,7 +15,6 @@ exports.scrapeContributionDataAndStats = function(url, callback) {
 };
 
 // Helper functions
-
 function deriveContributionStats(contributionData) {
 
     // Some variables
@@ -104,8 +67,6 @@ function deriveContributionStats(contributionData) {
     };
 }
 
-// Helper functions
-
 function formatReturnData(contributionData, statsData) {
     var commitsToday = getCommitsToday(contributionData);
     var returnData = {contributionData: contributionData, statsData: statsData, commitsToday: commitsToday};
@@ -128,37 +89,6 @@ function getCommitsToday(contributionData) {
     }
 
     return 0;
-};
-
-// Returns an Object Containing Contribution Stats
-// statDataObj = {
-//      totalContributions: #,
-//      longestStreak: #,
-//      currentStreak: #
-// };
-function scrapeContributionStats(html, callback) {
-    $ = cheerio.load(html);
-    var statDataObj = {};
-
-    $('.contrib-number').each(function(index, statData) {
-        var statData = statData.children[0].data;
-
-        if (index == 0) {
-            statDataObj.totalContributions = parseInt(statData);
-        } else if (index === 1) {
-            statDataObj.longestStreak = parseInt(statData);
-        } else {
-            statDataObj.currentStreak = parseInt(statData);
-        }
-    });
-
-    // Validate it contains data before sending
-    if (statDataObj) {
-        callback(statDataObj);
-    } else {
-        // If it fails validation return null
-        callback(null);
-    }
 };
 
 // Returns an Object Containing Contribution Data
@@ -206,66 +136,10 @@ function getRequest(gitUrl, callback) {
     });
 };
 
-// Tests
-/*
-getRequest("https://github.com/shikkic", function(html) {
-    console.log("Scraping Contribution Data");
-    scrapeContributionData(html, function(results) {
-        if (results == null) {
-            console.log("result is equal null ", results);
-            getRequest("https://github.com/shikkic", function(html) {
-                scrapeContributionData(html, function(results) {
-                    console.log(results);
-                });
-            });
-        } else {
-            console.log(results);
-        }
-    });
-});
-
-getRequest("https://github.com/shikkic", function(html) {
-    console.log("Scraping Contribution Stats");
-    scrapeContributionStats(html, function(results) {
-        if (results == null) {
-            console.log("result is equal null ", results);
-            getRequest("https://github.com/shikkic", function(html) {
-                scrapeContributionData(html, function(results) {
-                    console.log(results);
-                });
-            });
-        } else {
-            console.log(results);
-        }
-    });
-});*/
-
-// Test for scraping both contribution stats and data
-/*
-getRequest("http://www.github.com/skeswa", function(html) {
-    //console.log(html);
-	scrapeContributionStats(html, function(statsData) {
-		// TODO implement better error handling
-        console.log(statsData);
-		if (statsData) {
-            console.log("Stat data is null");
-			getRequest("http://www.github.com/skeswa", function(html) {
-				scrapeContributionStats(html, function(statsData) {
-					scrapeContributionData(html, function(contributionData) {
-						var returnObj = formatReturnData(contributionData, statsData);
-                        console.log(returnObj);
-					});
-				});
-			});
-		} else {
-            console.log("Stat data is not null");
-            console.log(statsData);
-			scrapeContributionData(html, function(contributionData) {
-                console.log(contributionData);
-				var returnObj = formatReturnData(contributionData, statsData);
-                console.log(returnObj);
-			});
-		}
-	});
-});
-*/
+// Deprecated warnings
+exports.scrapeContributionData = function() {
+    console.log('Deprecation warning: scrapeContributionData has been deprecated in favor of just using scrapeContributionDataAndStats.');
+};
+exports.scrapeContributionStats = function() {
+    console.log('Deprecation warning: scrapeContributionData has been deprecated in favor of just using scrapeContributionDataAndStats.');
+};
