@@ -1,6 +1,5 @@
 var request = require('request'),
-    cheerio = require('cheerio'),
-    moment = require('moment');
+    cheerio = require('cheerio');
 
 
 /**
