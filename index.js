@@ -29,8 +29,8 @@ exports.scrapeContributionDataAndStats = function(url, callback) {
 function deriveContributionStats(contributionData) {
 
     // Some variables
-    var longestStreak = 0;
-    var currentStreak = 0;
+    var longestStreak = 1;
+    var currentStreak = 1;
     var lastDay = '0-0-0';
 
     // Reduce the total number of contributions to a single integer
@@ -116,13 +116,6 @@ function getCommitsToday(contributionData) {
 
     return 0;
 };
-
-// Returns an Object Containing Contribution Data
-// CommitDataObj = {
-//      dataContributionCount: #,
-//      dataDate: #,
-// };
-
 
 /**
  * Returns an object containing contribution data
