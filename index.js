@@ -1,86 +1,112 @@
 var request = require('request'),
-    _ = require('underscore'),
-    cheerio = require('cheerio'),
-    moment = require('moment');
+    cheerio = require('cheerio');
 
-// Export Scrape Contribution Data Function
-exports.scrapeContributionData = function (url, callback) {
-    getRequest(url, function(html) {
-        scrapeContributionData(html, function(contributionData){
-            // TODO implement better error handling
-            if ( results == null) {
-                getRequest(url, function(html) {
-                    scrapeContributionData(data, function(contributionData) {
-                        callback(contributionData);
-                    });
-                });
-            } else {
-                callback(contributionData);
-            }
-        });
-    });
-};
 
-// Export Scrape Profile Stats Data Function
-exports.scrapeContributionStats = function (url, callback) {
-    getRequest(url, function(html) {
-        scrapeContributionStats(html, function(statsData) {
-            // TODO implement better error handling
-            if (results == null) {
-                getRequest(url, function(html) {
-                    scrapeContributionStats(html, function(statsData) {
-                        callback(statsData);
-                    });
-                });
-            } else {
-                callback(statsData);
-            }
-        });
-    });
-};
-
-// Export Scrape Profile Data and Stats function
+/**
+ * List of contributons, latest commit, streak etc.
+ *
+ * @param  {string} url - URL to the github repo
+ * @param  {function} callback - Receives the data
+ */
 exports.scrapeContributionDataAndStats = function(url, callback) {
     var returnObj = {};
     getRequest(url, function(html) {
-        scrapeContributionStats(html, function(statsData) {
-            // TODO implement better error handling
-            if (statsData == null) {
-                getRequest(url, function(html) {
-                    scrapeContributionStats(html, function(statsData) {
-                        scrapeContributionData(html, function(contributionData) {
-                            returnObj = formatReturnData(contributionData, statsData);   
-                            callback(returnObj);
-                        });
-                    });
-                });
-            } else {
-                scrapeContributionData(html, function(contributionData) {
-                    returnObj = formatReturnData(contributionData, statsData); 
-                    callback(returnObj);
-                });
-            }
+        scrapeContributionData(html, function(contributionData) {
+            returnObj = formatReturnData(contributionData, deriveContributionStats(contributionData));
+            callback(returnObj);
         });
     });
 };
 
-// Helper functions
 
+/**
+ * Derive the streak
+ *
+ * @param  {object} contributionData - Contribution data
+ * @return {object} - Stats derived from the contribution data
+ */
+function deriveContributionStats(contributionData) {
+
+    // Some variables
+    var longestStreak = 0;
+    var currentStreak = 0;
+    var lastDay = '0-0-0';
+
+    // Reduce the total number of contributions to a single integer
+    const totalContributions = contributionData.reduce(function (last, current, index) {
+
+        // Calculate the exptected day to continue the streak
+        var expectedDay = new Date(lastDay);
+        expectedDay.setDate(expectedDay.getDate() + 1); // Increment day by 1
+
+        const year = expectedDay.getFullYear();
+        var month = expectedDay.getMonth() + 1; // The month starts from zero
+        var day = expectedDay.getDate();
+
+        // Left-pad for noobs
+        if (month < 10) { month = '0' + month; }
+        if (day < 10) { day = '0' + day; }
+
+        expectedDay = (
+            year + '-' +
+            month + '-' +
+            day
+        );
+
+        // If the streak was continued, increment, else reset
+        if (expectedDay === current.dataDate) {
+            currentStreak++;
+        } else {
+            currentStreak = 0;
+        }
+
+        if (currentStreak > longestStreak) {
+            longestStreak = currentStreak;
+        }
+
+        // Update the last day
+        lastDay = current.dataDate;
+
+        return last + current.dataContributionCount;
+    }, 0);
+
+    return {
+        totalContributions: totalContributions,
+        longestStreak: longestStreak + 1,
+        currentStreak: currentStreak + 1
+    };
+}
+
+
+/**
+ * Neatly formats contributionData and statsData
+ *
+ * @param  {object} contributionData
+ * @param  {object} statsData
+ * @return {object} - Returns null if no commits have happened today
+ */
 function formatReturnData(contributionData, statsData) {
-    var commitsToday = getCommitsToday(contributionData); 
+    var commitsToday = getCommitsToday(contributionData);
     var returnData = {contributionData: contributionData, statsData: statsData, commitsToday: commitsToday};
     return commitsToday == null ? null : returnData;
 };
 
+
+/**
+ * Returns the amount of contributions that happened on the current day
+ *
+ * @param  {object} contributionData
+ * @return {integer} - Amount of contributions in the current day
+ */
 function getCommitsToday(contributionData) {
     if (!contributionData) {
         return null;
     }
 
-    // Grab lastest commit data
-    var latestCommits = _.last(contributionData),
-        latestCommitsDate = moment(latestCommits.dataDate).dayOfYear(),
-        todaysDate = moment().dayOfYear();
+    // Grab latest commit data
+    var latestCommits = contributionData[contributionData.length - 1];
+    var latestCommitsDate = dayOfYear(latestCommits.dataDate);
+    var todaysDate = dayOfYear(new Date());
 
     // Check if the lastest commit data is from today or not
     if (latestCommitsDate === todaysDate) {
@@ -90,42 +116,12 @@ function getCommitsToday(contributionData) {
     return 0;
 };
 
-// Returns an Object Containing Contribution Stats
-// statDataObj = {
-//      totalContributions: #,
-//      longestStreak: #,
-//      currentStreak: #
-// };
-function scrapeContributionStats(html, callback) {
-    $ = cheerio.load(html);
-    var statDataObj = {};
-
-    $('.contrib-number').each(function(index, statData) {
-        var statData = statData.children[0].data;
-
-        if (index == 0) {
-            statDataObj.totalContributions = parseInt(statData);
-        } else if (index === 1) {
-            statDataObj.longestStreak = parseInt(statData);
-        } else {
-            statDataObj.currentStreak = parseInt(statData);
-        }
-    });
-
-    // Validate it contains data before sending
-    if (statDataObj) {
-        callback(statDataObj);
-    } else {
-        // If it fails validation return null
-        callback(null);
-    }
-}; 
-
-// Returns an Object Containing Contribution Data
-// CommitDataObj = {
-//      dataContributionCount: #,
-//      dataDate: #,
-// };
+/**
+ * Returns an object containing contribution data
+ *
+ * @param  {string} html - HTML of the github page
+ * @param  {function} callback - Receives contribution data
+ */
 function scrapeContributionData(html, callback) {
     $ = cheerio.load(html);
     var commitDataArray = [];
@@ -141,7 +137,7 @@ function scrapeContributionData(html, callback) {
             commitDataObj.dataContributionCount = dataContributionCount;
             commitDataObj.dataDate = dataDate;
             commitDataArray.push(commitDataObj);
-        } 
+        }
     });
 
     // Validate it contains data before sending
@@ -151,14 +147,20 @@ function scrapeContributionData(html, callback) {
         // If it fails validation return null
         callback(null);
     }
-}; 
+};
 
-// GET Request Helper Function 
+
+/**
+ * Opiniated get request
+ *
+ * @param  {string} gitUrl
+ * @param  {function} callback3
+ */
 function getRequest(gitUrl, callback) {
     var options = {
         url: gitUrl
     };
-    request.get(options, function(error, response, body){
+    request.get(options, function(error, response, body) {
         if(!error) {
             callback(body);
         }
@@ -166,66 +168,27 @@ function getRequest(gitUrl, callback) {
     });
 };
 
-// Tests
-/*
-getRequest("https://github.com/shikkic", function(html) {
-    console.log("Scraping Contribution Data");
-    scrapeContributionData(html, function(results) {
-        if (results == null) {
-            console.log("result is equal null ", results);
-            getRequest("https://github.com/shikkic", function(html) {
-                scrapeContributionData(html, function(results) {
-                    console.log(results);
-                });
-            });
-        } else {
-            console.log(results);
-        }
-    });
-});
 
-getRequest("https://github.com/shikkic", function(html) {
-    console.log("Scraping Contribution Stats");
-    scrapeContributionStats(html, function(results) {
-        if (results == null) {
-            console.log("result is equal null ", results);
-            getRequest("https://github.com/shikkic", function(html) {
-                scrapeContributionData(html, function(results) {
-                    console.log(results);
-                });
-            });
-        } else {
-            console.log(results);
-        }
-    });
-});*/
+/**
+ * Returns the day of the year
+ *
+ * @param {string, date} date - Can be a string or a timestamp
+ * @return {integer} The day of the year
+ */
+function dayOfYear(date) {
+    var now = new Date(date);
+    var start = new Date(now.getFullYear(), 0, 0);
+    var diff = now - start;
+    var oneDay = 1000 * 60 * 60 * 24;
+    var day = Math.floor(diff / oneDay);
 
-// Test for scraping both contribution stats and data
-/*
-getRequest("http://www.github.com/skeswa", function(html) {
-    //console.log(html);
-	scrapeContributionStats(html, function(statsData) {
-		// TODO implement better error handling
-        console.log(statsData);
-		if (statsData) {
-            console.log("Stat data is null");
-			getRequest("http://www.github.com/skeswa", function(html) {
-				scrapeContributionStats(html, function(statsData) {
-					scrapeContributionData(html, function(contributionData) {
-						var returnObj = formatReturnData(contributionData, statsData);   
-                        console.log(returnObj);
-					});
-				});
-			});
-		} else {
-            console.log("Stat data is not null");
-            console.log(statsData);
-			scrapeContributionData(html, function(contributionData) {
-                console.log(contributionData);
-				var returnObj = formatReturnData(contributionData, statsData); 
-                console.log(returnObj);
-			});
-		}
-	});
-});
-*/
+    return day;
+}
+
+// Deprecated warnings
+exports.scrapeContributionData = function() {
+    console.log('Deprecation warning: scrapeContributionData has been deprecated in favor of just using scrapeContributionDataAndStats.');
+};
+exports.scrapeContributionStats = function() {
+    console.log('Deprecation warning: scrapeContributionData has been deprecated in favor of just using scrapeContributionDataAndStats.');
+};

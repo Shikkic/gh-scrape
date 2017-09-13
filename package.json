@@ -1,17 +1,15 @@
 {
   "name": "gh-scrape",
-  "version": "1.0.10",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test"
   },
   "author": "Shikkic",
   "license": "ISC",
   "dependencies": {
     "cheerio": "^0.19.0",
-    "moment": "^2.11.2",
-    "request": "^2.64.0",
-    "underscore": "^1.8.3"
+    "request": "^2.64.0"
   }
 }
