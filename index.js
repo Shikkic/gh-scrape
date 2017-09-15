@@ -106,7 +106,8 @@ function getCommitsToday(contributionData) {
     // Grab latest commit data
     var latestCommits = contributionData[contributionData.length - 1];
     var latestCommitsDate = dayOfYear(latestCommits.dataDate);
-    var todaysDate = dayOfYear(new Date());
+    var today = new Date();
+    var todaysDate = dayOfYear(today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate());
 
     // Check if the lastest commit data is from today or not
     if (latestCommitsDate === todaysDate) {
